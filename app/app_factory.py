@@ -7,6 +7,7 @@ from app.api.data import router as data_router
 from app.api.health import router as health_router
 from app.api.regime import router as regime_router
 from app.api.signals import router as signals_router
+from app.api.health import router as health_router
 from app.ui.router import router as ui_router
 from config import settings
 
