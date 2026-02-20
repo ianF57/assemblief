@@ -24,8 +24,7 @@ When started via `python main.py` the app will:
 - `/health` – JSON health status
 - `/api/data/{asset}?timeframe=1h` – unified OHLCV market data with SQLite caching
 - `/api/regime/{asset}?timeframe=1h` – regime classification with confidence score and historical distribution
-- `/api/signals/{asset}?timeframe=1h` – generate and rank candidate strategy signals (robustness-gated)
-- `/api/backtest/{asset}?signal=trend_v1&timeframe=1h` – run walk-forward backtest with robustness diagnostics
+- `/api/signals/{asset}?timeframe=1h` – generate and rank candidate strategy signals
 
 ## Unified market data
 
@@ -82,18 +81,3 @@ Runtime config is managed through environment variables in `config.py`:
 - `APP_PORT`
 - `LOG_LEVEL`
 - `DB_PATH`
-
-
-## Backtesting engine
-
-Includes:
-- walk-forward validation
-- out-of-sample split
-- transaction costs + slippage
-- Monte Carlo stability
-- parameter sensitivity testing
-
-Metrics:
-- CAGR, Sharpe, Sortino, Calmar
-- Max drawdown, Profit factor, Expectancy
-- Risk of ruin, Win rate

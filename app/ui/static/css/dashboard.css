@@ -31,6 +31,7 @@ body {
     align-items: baseline;
     gap: 1rem;
     margin-bottom: 1.2rem;
+    margin-bottom: 2rem;
 }
 
 .kicker {
@@ -48,48 +49,6 @@ h1 {
 .stamp {
     color: var(--muted);
     font-size: 0.85rem;
-}
-
-.controls {
-    margin-bottom: 1rem;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 1rem;
-    align-items: end;
-}
-
-.control-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-}
-
-label {
-    color: var(--muted);
-    font-size: 0.85rem;
-}
-
-select,
-button {
-    background: #0f1a2e;
-    border: 1px solid var(--edge);
-    color: var(--text);
-    border-radius: 8px;
-    padding: 0.55rem 0.65rem;
-}
-
-button {
-    cursor: pointer;
-}
-
-button:hover {
-    border-color: var(--accent);
-}
-
-.button-row {
-    display: flex;
-    gap: 0.6rem;
-    flex-wrap: wrap;
 }
 
 .grid {
@@ -114,31 +73,4 @@ p {
     margin-bottom: 0;
     color: var(--muted);
     line-height: 1.5;
-}
-
-.regime-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.8rem;
-    margin-top: 0.45rem;
-}
-
-.regime-row strong {
-    color: var(--text);
-    text-transform: capitalize;
-}
-
-.metric {
-    color: var(--text);
-    font-size: 1.7rem;
-    font-weight: 700;
-}
-
-
-canvas {
-    width: 100%;
-    background: #0f1a2e;
-    border: 1px solid var(--edge);
-    border-radius: 8px;
-    margin-top: 0.6rem;
 }

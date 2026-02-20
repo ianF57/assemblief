@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import asdict
 from typing import Any
 
-from app.backtesting.backtester import Backtester
 from app.data.data_manager import DataManager
 from app.regime.regime_classifier import RegimeClassifier
 from app.signals.base_signal import SignalCandidate
@@ -18,17 +17,11 @@ class SignalManager:
     def __init__(self) -> None:
         self.data_manager = DataManager()
         self.regime_classifier = RegimeClassifier()
-        self.backtester = Backtester()
         self.strategies = [
             TrendSignalV1(),
             MeanReversionV1(),
             BreakoutV1(),
         ]
-        self.signal_alias = {
-            "trend_following": "trend_v1",
-            "mean_reversion": "mean_reversion_v1",
-            "breakout": "breakout_v1",
-        }
 
     async def generate_signals(self, asset: str, timeframe: str = "1h") -> dict[str, Any]:
         ohlcv_response = await self.data_manager.get_ohlcv(asset=asset, timeframe=timeframe)
@@ -36,8 +29,6 @@ class SignalManager:
         regime_snapshot = self.regime_classifier.classify(data)
 
         candidates: list[SignalCandidate] = []
-        rejected: list[dict[str, Any]] = []
-
         for strategy in self.strategies:
             candidate = strategy.generate(
                 asset=ohlcv_response["asset"],
@@ -45,24 +36,8 @@ class SignalManager:
                 ohlcv=data,
                 regime=regime_snapshot.current_regime,
             )
-            if candidate is None:
-                continue
-
-            signal_name = self.signal_alias.get(candidate.strategy_label)
-            if not signal_name:
-                continue
-            backtest = await self.backtester.run(asset=ohlcv_response["asset"], timeframe=timeframe, signal_name=signal_name)
-            if bool(backtest["robustness"]["passed"]):
+            if candidate is not None:
                 candidates.append(candidate)
-            else:
-                rejected.append(
-                    {
-                        "strategy_label": candidate.strategy_label,
-                        "version": candidate.version,
-                        "reason": "Failed robustness checks",
-                        "robustness": backtest["robustness"],
-                    }
-                )
 
         ranked = sorted(candidates, key=lambda c: c.performance_score, reverse=True)
         return {
@@ -72,5 +47,4 @@ class SignalManager:
             "confidence_score": regime_snapshot.confidence_score,
             "signals": [asdict(signal) for signal in ranked],
             "signal_count": len(ranked),
-            "rejected_signals": rejected,
         }
