@@ -4,7 +4,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Query
 
-from app.signals import SignalManager
+from app.signals.signal_manager import SignalManager
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["signals"])
