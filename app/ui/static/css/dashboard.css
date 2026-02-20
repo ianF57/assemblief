@@ -73,24 +73,3 @@ p {
     color: var(--muted);
     line-height: 1.5;
 }
-
-.regime-widget {
-    grid-column: span 2;
-}
-
-.regime-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.8rem;
-    margin-top: 0.5rem;
-}
-
-.regime-row strong {
-    color: var(--text);
-    text-transform: capitalize;
-}
-
-.regime-distribution {
-    margin-top: 0.9rem;
-    font-size: 0.85rem;
-}
