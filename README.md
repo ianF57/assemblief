@@ -20,27 +20,6 @@ When started via `python main.py` the app will:
 
 - `/` – institutional style dashboard (Jinja2 template)
 - `/health` – JSON health status
-- `/api/data/{asset}?timeframe=1h` – unified OHLCV market data with SQLite caching
-
-## Unified market data
-
-Supported timeframes:
-- `1m`, `5m`, `1h`, `1d`, `1w`
-
-Supported providers:
-- `crypto` → Binance public API
-- `forex` → Yahoo Finance public chart API
-- `futures` → Yahoo Finance public chart API
-
-Asset format examples:
-
-- `crypto:BTCUSDT`
-- `forex:EURUSD`
-- `futures:ES`
-
-Response includes `source`:
-- `provider` when fetched from upstream
-- `cache` when served from local SQLite
 
 ## Configuration
 
