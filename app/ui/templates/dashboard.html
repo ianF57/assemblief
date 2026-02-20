@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css" />
+</head>
+<body>
+    <main class="shell">
+        <header class="topline">
+            <div>
+                <p class="kicker">ASSEMBLIEF</p>
+                <h1>Institutional Strategy Dashboard</h1>
+            </div>
+            <span class="stamp">Generated {{ generated_at }}</span>
+        </header>
+
+        <section class="controls card">
+            <div class="control-group">
+                <label for="asset-select">Asset</label>
+                <select id="asset-select">
+                    <option value="crypto:BTCUSDT">BTCUSD</option>
+                    <option value="crypto:ETHUSDT">ETHUSD</option>
+                    <option value="forex:EURUSD">EURUSD</option>
+                    <option value="forex:GBPUSD">GBPUSD</option>
+                    <option value="futures:ES">ES</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="timeframe-select">Timeframe</label>
+                <select id="timeframe-select">
+                    <option value="1m">1m</option>
+                    <option value="5m">5m</option>
+                    <option value="1h" selected>1h</option>
+                    <option value="1d">1d</option>
+                    <option value="1w">1w</option>
+                </select>
+            </div>
+
+            <div class="button-row">
+                <button id="fetch-regime" type="button">Fetch Regime</button>
+                <button id="refresh-data" type="button">Refresh Data</button>
+                <button id="show-chart" type="button">Show Chart</button>
+            </div>
+        </section>
+
+        <section class="grid">
+            <article class="card">
+                <h2>Regime Monitor</h2>
+                <p class="regime-row"><span>Asset</span><strong id="regime-asset">--</strong></p>
+                <p class="regime-row"><span>Current Regime</span><strong id="regime-current">--</strong></p>
+            </article>
+            <article class="card">
+                <h2>Confidence Score</h2>
+                <p class="metric" id="regime-confidence">--%</p>
+                <p id="regime-confidence-caption">Confidence updates after fetching data.</p>
+            </article>
+            <article class="card">
+                <h2>Historical Distribution</h2>
+                <p id="regime-distribution">No regime distribution loaded yet.</p>
+            </article>
+            <article class="card" id="chart-panel">
+                <h2>Chart Snapshot</h2>
+                <p id="chart-summary">Use “Show Chart” to render recent OHLC values from the current selection.</p>
+            </article>
+        </section>
+    </main>
+
+    <script>
+        const assetSelect = document.getElementById('asset-select');
+        const timeframeSelect = document.getElementById('timeframe-select');
+        const fetchButton = document.getElementById('fetch-regime');
+        const refreshButton = document.getElementById('refresh-data');
+        const chartButton = document.getElementById('show-chart');
+
+        let lastPayload = null;
+
+        function prettifyRegime(regime) {
+            return regime ? regime.replaceAll('_', ' ') : '--';
+        }
+
+        function updateDashboard(json) {
+            lastPayload = json;
+            document.getElementById('regime-asset').textContent = json.asset || '--';
+            document.getElementById('regime-current').textContent = prettifyRegime(json.current_regime);
+            document.getElementById('regime-confidence').textContent = `${Number(json.confidence_score).toFixed(2)}%`;
+            document.getElementById('regime-confidence-caption').textContent = `Timeframe: ${json.timeframe}`;
+
+            const distribution = Object.entries(json.historical_distribution || {})
+                .map(([key, value]) => `${key.replaceAll('_', ' ')}: ${value}%`)
+                .join(' · ');
+
+            document.getElementById('regime-distribution').textContent = distribution || 'No distribution available.';
+        }
+
+        async function fetchRegime(asset, timeframe) {
+            const resp = await fetch(`/api/regime/${asset}?timeframe=${timeframe}`);
+            if (!resp.ok) {
+                const errorText = await resp.text();
+                throw new Error(`Regime API failed (${resp.status}): ${errorText}`);
+            }
+            const json = await resp.json();
+            updateDashboard(json);
+            return json;
+        }
+
+        async function handleFetch() {
+            try {
+                await fetchRegime(assetSelect.value, timeframeSelect.value);
+            } catch (error) {
+                document.getElementById('regime-current').textContent = 'Unavailable';
+                document.getElementById('regime-distribution').textContent = error.message;
+            }
+        }
+
+        function renderChartSummary() {
+            const chartSummary = document.getElementById('chart-summary');
+            if (!lastPayload) {
+                chartSummary.textContent = 'Fetch regime data first to view a chart-oriented summary.';
+                return;
+            }
+
+            const dist = lastPayload.historical_distribution || {};
+            const strongest = Object.entries(dist).sort((a, b) => b[1] - a[1])[0];
+            if (!strongest) {
+                chartSummary.textContent = 'No distribution data available.';
+                return;
+            }
+
+            chartSummary.textContent = `Dominant recent regime: ${prettifyRegime(strongest[0])} (${strongest[1]}%). Selected: ${lastPayload.asset} @ ${lastPayload.timeframe}.`;
+        }
+
+        fetchButton.addEventListener('click', handleFetch);
+        refreshButton.addEventListener('click', handleFetch);
+        chartButton.addEventListener('click', renderChartSummary);
+
+        handleFetch();
+    </script>
+</body>
+</html>
