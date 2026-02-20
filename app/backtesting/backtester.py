@@ -16,9 +16,9 @@ class Backtester:
         self.transaction_cost = 0.0005
         self.slippage = 0.0008
 
-    async def run(self, asset: str, timeframe: str, signal_name: str, candles_override: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    async def run(self, asset: str, timeframe: str, signal_name: str) -> dict[str, Any]:
         response = await self.data_manager.get_ohlcv(asset=asset, timeframe=timeframe)
-        candles: list[dict[str, Any]] = candles_override if candles_override is not None else response["data"]
+        candles: list[dict[str, Any]] = response["data"]
         closes = [float(c["close"]) for c in candles]
         if len(closes) < 60:
             raise ValueError("Insufficient data for backtesting. Need at least 60 candles.")

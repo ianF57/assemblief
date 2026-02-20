@@ -7,7 +7,9 @@
     --accent: #7bb4ff;
 }
 
-* { box-sizing: border-box; }
+* {
+    box-sizing: border-box;
+}
 
 body {
     margin: 0;
@@ -18,9 +20,9 @@ body {
 }
 
 .shell {
-    max-width: 1200px;
+    max-width: 1100px;
     margin: 0 auto;
-    padding: 2rem 1.25rem;
+    padding: 2.5rem 1.5rem;
 }
 
 .topline {
@@ -28,14 +30,15 @@ body {
     justify-content: space-between;
     align-items: baseline;
     gap: 1rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.2rem;
+    margin-bottom: 2rem;
 }
 
 .kicker {
-    margin: 0;
     letter-spacing: 0.2em;
     font-size: 0.75rem;
     color: var(--accent);
+    margin: 0;
 }
 
 h1 {
@@ -48,70 +51,26 @@ h1 {
     font-size: 0.85rem;
 }
 
-.card {
-    background: linear-gradient(170deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
-    border: 1px solid var(--edge);
-    border-radius: 12px;
-    padding: 1rem;
-}
-
-.controls {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 0.9rem;
-    align-items: end;
-    margin-bottom: 1rem;
-}
-
-.control-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-}
-
-label {
-    color: var(--muted);
-    font-size: 0.85rem;
-}
-
-select, button {
-    background: #0f1a2e;
-    border: 1px solid var(--edge);
-    color: var(--text);
-    border-radius: 8px;
-    padding: 0.55rem 0.65rem;
-}
-
-button { cursor: pointer; }
-button:hover { border-color: var(--accent); }
-
-.button-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.6rem;
-}
-
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 1rem;
+}
+
+.card {
+    background: linear-gradient(170deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+    border: 1px solid var(--edge);
+    border-radius: 12px;
+    padding: 1.1rem;
 }
 
 h2 {
     margin-top: 0;
-    font-size: 1rem;
+    font-size: 1.05rem;
 }
 
-.output-panel pre {
-    margin: 0;
-    background: #0f1a2e;
-    border: 1px solid var(--edge);
-    border-radius: 8px;
-    padding: 0.75rem;
+p {
+    margin-bottom: 0;
     color: var(--muted);
-    max-height: 340px;
-    overflow: auto;
-    white-space: pre-wrap;
-    word-break: break-word;
-    font-size: 0.85rem;
+    line-height: 1.5;
 }

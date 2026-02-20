@@ -16,116 +16,20 @@
             <span class="stamp">Generated {{ generated_at }}</span>
         </header>
 
-        <section class="card controls">
-            <div class="control-group">
-                <label for="asset-select">Asset</label>
-                <select id="asset-select">
-                    <option value="BTCUSDT">BTCUSDT</option>
-                    <option value="ETHUSDT">ETHUSDT</option>
-                    <option value="XRPUSDT">XRPUSDT</option>
-                    <option value="LTCUSDT">LTCUSDT</option>
-                    <option value="EURUSD=X">EURUSD=X</option>
-                    <option value="GBPUSD=X">GBPUSD=X</option>
-                    <option value="ES=F">ES=F</option>
-                </select>
-            </div>
-
-            <div class="control-group">
-                <label for="timeframe-select">Timeframe</label>
-                <select id="timeframe-select">
-                    <option value="1m">1m</option>
-                    <option value="5m">5m</option>
-                    <option value="1h" selected>1h</option>
-                    <option value="1d">1d</option>
-                    <option value="1w">1w</option>
-                </select>
-            </div>
-
-            <div class="button-row">
-                <button id="fetch-regime" type="button">Fetch Regime</button>
-                <button id="fetch-signals" type="button">Fetch Signals</button>
-                <button id="fetch-backtest" type="button">Fetch Backtest</button>
-            </div>
-        </section>
-
         <section class="grid">
-            <article class="card output-panel">
-                <h2>Regime JSON</h2>
-                <pre id="regime-output">Click "Fetch Regime" to load data.</pre>
+            <article class="card">
+                <h2>Regime Monitor</h2>
+                <p>Volatility profile stable. Macro stress indicators remain neutral.</p>
             </article>
-
-            <article class="card output-panel">
-                <h2>Signals JSON</h2>
-                <pre id="signals-output">Click "Fetch Signals" to load data.</pre>
+            <article class="card">
+                <h2>Signal Composite</h2>
+                <p>Cross-asset momentum and carry signals are aligned.</p>
             </article>
-
-            <article class="card output-panel">
-                <h2>Backtest JSON</h2>
-                <pre id="backtest-output">Click "Fetch Backtest" to load data.</pre>
+            <article class="card">
+                <h2>Portfolio Snapshot</h2>
+                <p>Risk budget utilization: <strong>63%</strong>. Drawdown guardrails active.</p>
             </article>
         </section>
     </main>
-
-    <script>
-        function selectedValues() {
-            const asset = document.getElementById("asset-select").value;
-            const timeframe = document.getElementById("timeframe-select").value;
-            return { asset, timeframe };
-        }
-
-        function renderJSON(targetId, payload) {
-            document.getElementById(targetId).textContent = JSON.stringify(payload, null, 2);
-        }
-
-        async function requestJSON(url) {
-            const response = await fetch(url);
-            const text = await response.text();
-            let payload;
-            try {
-                payload = JSON.parse(text);
-            } catch {
-                payload = { message: text };
-            }
-
-            if (!response.ok) {
-                throw new Error(payload.detail || payload.message || `Request failed (${response.status})`);
-            }
-            return payload;
-        }
-
-        async function fetchRegime() {
-            const { asset, timeframe } = selectedValues();
-            try {
-                const data = await requestJSON(`/api/regime/${asset}?timeframe=${timeframe}`);
-                renderJSON("regime-output", data);
-            } catch (error) {
-                renderJSON("regime-output", { error: error.message });
-            }
-        }
-
-        async function fetchSignals() {
-            const { asset, timeframe } = selectedValues();
-            try {
-                const data = await requestJSON(`/api/signals/${asset}?timeframe=${timeframe}`);
-                renderJSON("signals-output", data);
-            } catch (error) {
-                renderJSON("signals-output", { error: error.message });
-            }
-        }
-
-        async function fetchBacktest() {
-            const { asset, timeframe } = selectedValues();
-            try {
-                const data = await requestJSON(`/api/backtest/${asset}?signal=trend_v1&timeframe=${timeframe}`);
-                renderJSON("backtest-output", data);
-            } catch (error) {
-                renderJSON("backtest-output", { error: error.message });
-            }
-        }
-
-        document.getElementById("fetch-regime").addEventListener("click", fetchRegime);
-        document.getElementById("fetch-signals").addEventListener("click", fetchSignals);
-        document.getElementById("fetch-backtest").addEventListener("click", fetchBacktest);
-    </script>
 </body>
 </html>
