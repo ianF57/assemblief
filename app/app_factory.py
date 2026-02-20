@@ -3,9 +3,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from app.api.data import router as data_router
 from app.api.health import router as health_router
-from app.api.regime import router as regime_router
 from app.ui.router import router as ui_router
 from config import settings
 
@@ -15,7 +13,5 @@ def create_app() -> FastAPI:
     app = FastAPI(title=settings.app_name)
     app.include_router(ui_router)
     app.include_router(health_router)
-    app.include_router(data_router)
-    app.include_router(regime_router)
     app.mount("/static", StaticFiles(directory="app/ui/static"), name="static")
     return app
