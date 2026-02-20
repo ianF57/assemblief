@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css" />
+</head>
+<body>
+    <main class="shell">
+        <header class="topline">
+            <div>
+                <p class="kicker">ASSEMBLIEF</p>
+                <h1>Institutional Strategy Dashboard</h1>
+            </div>
+            <span class="stamp">Generated {{ generated_at }}</span>
+        </header>
+
+        <section class="grid">
+            <article class="card">
+                <h2>Regime Monitor</h2>
+                <p>Volatility profile stable. Macro stress indicators remain neutral.</p>
+            </article>
+            <article class="card">
+                <h2>Signal Composite</h2>
+                <p>Cross-asset momentum and carry signals are aligned.</p>
+            </article>
+            <article class="card">
+                <h2>Portfolio Snapshot</h2>
+                <p>Risk budget utilization: <strong>63%</strong>. Drawdown guardrails active.</p>
+            </article>
+            <article class="card regime-widget" id="regime-widget">
+                <h2>Live Regime Classification</h2>
+                <p class="regime-row"><span>Asset</span><strong id="regime-asset">crypto:BTCUSDT</strong></p>
+                <p class="regime-row"><span>Current Regime</span><strong id="regime-current">Loading...</strong></p>
+                <p class="regime-row"><span>Confidence</span><strong id="regime-confidence">--</strong></p>
+                <p class="regime-distribution" id="regime-distribution">Awaiting data...</p>
+            </article>
+        </section>
+    </main>
+
+    <script>
+        async function loadRegimeSummary() {
+            const endpoint = '/api/regime/crypto:BTCUSDT?timeframe=1h';
+            try {
+                const response = await fetch(endpoint);
+                if (!response.ok) {
+                    throw new Error(`Request failed: ${response.status}`);
+                }
+                const payload = await response.json();
+                document.getElementById('regime-asset').textContent = payload.asset;
+                document.getElementById('regime-current').textContent = payload.current_regime.replaceAll('_', ' ');
+                document.getElementById('regime-confidence').textContent = `${payload.confidence_score.toFixed(2)}%`;
+
+                const distribution = Object.entries(payload.historical_distribution)
+                    .map(([key, value]) => `${key.replaceAll('_', ' ')}: ${value}%`)
+                    .join(' · ');
+                document.getElementById('regime-distribution').textContent = distribution;
+            } catch (error) {
+                document.getElementById('regime-current').textContent = 'Unavailable';
+                document.getElementById('regime-distribution').textContent = 'Could not load regime summary from API.';
+            }
+        }
+
+        loadRegimeSummary();
+    </script>
+</body>
+</html>
