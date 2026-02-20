@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css" />
+</head>
+<body>
+    <main class="shell">
+        <header class="topline">
+            <div>
+                <p class="kicker">ASSEMBLIEF</p>
+                <h1>Institutional Strategy Dashboard</h1>
+            </div>
+            <span class="stamp">Generated {{ generated_at }}</span>
+        </header>
+
+        <section class="controls card">
+            <div class="control-group">
+                <label for="asset-select">Asset</label>
+                <select id="asset-select">
+                    <option value="crypto:BTCUSDT">BTCUSD</option>
+                    <option value="crypto:ETHUSDT">ETHUSD</option>
+                    <option value="forex:EURUSD">EURUSD</option>
+                    <option value="forex:GBPUSD">GBPUSD</option>
+                    <option value="futures:ES">ES</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="timeframe-select">Timeframe</label>
+                <select id="timeframe-select">
+                    <option value="1m">1m</option>
+                    <option value="5m">5m</option>
+                    <option value="1h" selected>1h</option>
+                    <option value="1d">1d</option>
+                    <option value="1w">1w</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="signal-select">Signal</label>
+                <select id="signal-select">
+                    <option value="trend_v1" selected>trend_v1</option>
+                    <option value="mean_reversion_v1">mean_reversion_v1</option>
+                    <option value="breakout_v1">breakout_v1</option>
+                </select>
+            </div>
+
+            <div class="button-row">
+                <button id="fetch-regime" type="button">Fetch Regime</button>
+                <button id="refresh-data" type="button">Refresh Data</button>
+                <button id="show-chart" type="button">Show Chart</button>
+            </div>
+        </section>
+
+        <section class="grid">
+            <article class="card">
+                <h2>Regime Monitor</h2>
+                <p class="regime-row"><span>Asset</span><strong id="regime-asset">--</strong></p>
+                <p class="regime-row"><span>Current Regime</span><strong id="regime-current">--</strong></p>
+            </article>
+            <article class="card">
+                <h2>Confidence Score</h2>
+                <p class="metric" id="regime-confidence">--%</p>
+                <p id="regime-confidence-caption">Confidence updates after fetching data.</p>
+            </article>
+            <article class="card">
+                <h2>Historical Distribution</h2>
+                <p id="regime-distribution">No regime distribution loaded yet.</p>
+            </article>
+            <article class="card" id="chart-panel">
+                <h2>Backtest Summary</h2>
+                <p id="chart-summary">Use “Show Chart” to render equity + drawdown from /api/backtest.</p>
+                <canvas id="equity-chart" width="460" height="140"></canvas>
+                <canvas id="drawdown-chart" width="460" height="140"></canvas>
+            </article>
+        </section>
+    </main>
+
+    <script>
+        const assetSelect = document.getElementById('asset-select');
+        const timeframeSelect = document.getElementById('timeframe-select');
+        const signalSelect = document.getElementById('signal-select');
+        const fetchButton = document.getElementById('fetch-regime');
+        const refreshButton = document.getElementById('refresh-data');
+        const chartButton = document.getElementById('show-chart');
+
+        let lastRegimePayload = null;
+
+        function prettifyRegime(regime) {
+            return regime ? regime.replaceAll('_', ' ') : '--';
+        }
+
+        function updateDashboard(json) {
+            lastRegimePayload = json;
+            document.getElementById('regime-asset').textContent = json.asset || '--';
+            document.getElementById('regime-current').textContent = prettifyRegime(json.current_regime);
+            document.getElementById('regime-confidence').textContent = `${Number(json.confidence_score).toFixed(2)}%`;
+            document.getElementById('regime-confidence-caption').textContent = `Timeframe: ${json.timeframe}`;
+
+            const distribution = Object.entries(json.historical_distribution || {})
+                .map(([key, value]) => `${key.replaceAll('_', ' ')}: ${value}%`)
+                .join(' · ');
+            document.getElementById('regime-distribution').textContent = distribution || 'No distribution available.';
+        }
+
+        async function fetchRegime(asset, timeframe) {
+            const resp = await fetch(`/api/regime/${asset}?timeframe=${timeframe}`);
+            if (!resp.ok) {
+                throw new Error(`Regime API failed (${resp.status}).`);
+            }
+            const json = await resp.json();
+            updateDashboard(json);
+            return json;
+        }
+
+        async function fetchBacktest(asset, timeframe, signal) {
+            const resp = await fetch(`/api/backtest/${asset}?signal=${signal}&timeframe=${timeframe}`);
+            if (!resp.ok) {
+                throw new Error(`Backtest API failed (${resp.status}).`);
+            }
+            return await resp.json();
+        }
+
+        function drawLineChart(canvasId, values, color) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (!values || values.length < 2) {
+                return;
+            }
+
+            const minVal = Math.min(...values);
+            const maxVal = Math.max(...values);
+            const span = Math.max(1e-9, maxVal - minVal);
+
+            ctx.beginPath();
+            values.forEach((value, idx) => {
+                const x = (idx / (values.length - 1)) * (canvas.width - 10) + 5;
+                const y = canvas.height - ((value - minVal) / span) * (canvas.height - 10) - 5;
+                if (idx === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        async function handleFetch() {
+            try {
+                await fetchRegime(assetSelect.value, timeframeSelect.value);
+            } catch (error) {
+                document.getElementById('regime-current').textContent = 'Unavailable';
+                document.getElementById('regime-distribution').textContent = error.message;
+            }
+        }
+
+        async function handleChart() {
+            const summary = document.getElementById('chart-summary');
+            try {
+                const payload = await fetchBacktest(assetSelect.value, timeframeSelect.value, signalSelect.value);
+                const metrics = payload.metrics || {};
+                summary.textContent = `Signal ${payload.signal} | CAGR ${metrics.cagr}% | Sharpe ${metrics.sharpe} | MaxDD ${metrics.max_drawdown}% | Robustness ${payload.robustness.robustness_score}`;
+                drawLineChart('equity-chart', payload.equity_curve || [], '#7bb4ff');
+                drawLineChart('drawdown-chart', payload.drawdown_curve || [], '#ff8585');
+            } catch (error) {
+                summary.textContent = error.message;
+            }
+        }
+
+        fetchButton.addEventListener('click', handleFetch);
+        refreshButton.addEventListener('click', handleFetch);
+        chartButton.addEventListener('click', handleChart);
+
+        handleFetch();
+    </script>
+</body>
+</html>
